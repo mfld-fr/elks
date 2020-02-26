@@ -124,7 +124,7 @@ $(OUT):	$(OBJS)
 $(OBJS): config.mk
 
 clean:
-	$(RM) $(OBJS)
+	$(RM) $(OUT) $(OUT).map $(OUT).tar.xz *.o cmd/*.o lib/*.o
 
 doc:	README.html
 

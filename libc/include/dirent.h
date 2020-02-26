@@ -1,9 +1,10 @@
-
 #ifndef	__DIRENT_H
 #define	__DIRENT_H
 
 #include <features.h>
+#include <stddef.h>
 #include <sys/types.h>
+#include __SYSINC__(dirent.h)
 
 #ifndef	MAXNAMLEN
 #define	MAXNAMLEN	255
@@ -24,14 +25,6 @@ typedef int (*__dir_compar_fn_t) __P ((
                 __const struct dirent * __const *
                 ));
 
-// FIXME: duplicate declaration
-struct dirent {
-	ino_t		d_ino;
-	off_t		d_off;
-	unsigned short	d_reclen;
-	char		d_name[MAXNAMLEN+1];
-};
-
 extern DIR *opendir __P ((__const char *__name));
 extern int closedir __P ((DIR * __dirp));
 extern struct dirent *readdir __P ((DIR * __dirp));
@@ -50,4 +43,3 @@ extern int scandir __P ((__const char *__dir,
 			 __dir_compar_fn_t __compar));
 
 #endif /* dirent.h  */
-
