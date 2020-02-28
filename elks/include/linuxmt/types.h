@@ -25,14 +25,12 @@ typedef __u16			gid_t;
 // Large FAT volumes need 32-bit inode number
 // to store both sector number and directory entry relative index
 
-// PRIino is C99-like macro for portability
-
 #ifdef CONFIG_32BIT_INODES
 typedef __u32 ino_t;
-#define PRIino "lu"
+#define ino_print "lu"
 #else
 typedef __u16 ino_t;
-#define PRIino "u"
+#define ino_print "u"
 #endif
 
 typedef __u16			mode_t;
