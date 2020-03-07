@@ -58,6 +58,10 @@ TARGET_FILE = $(IMGDIR)/hd.bin
 TARGET_BLKS = $(CONFIG_IMG_BLOCKS)
 endif
 
+ifdef CONFIG_IMG_RAW
+TARGET_FILE = $(IMGDIR)/fd.bin
+endif
+
 # Image filesystem options
 
 ifdef CONFIG_IMG_MINIX

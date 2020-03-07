@@ -22,18 +22,20 @@ ifdef CONFIG_IMG_BOOT
 TARGETS += $(FD_BOOTBLOCK) $(FD_BOOTSECT) $(ELKS_DIR)/arch/i86/boot/Image
 endif
 
-TARGETS += template
-
 ifdef CONFIG_IMG_MINIX
-TARGETS += minixfs
+TARGETS += template minixfs
 endif
 
 ifdef CONFIG_IMG_FAT
-TARGETS += fatfs
+TARGETS += template fatfs
 endif
 
 ifdef CONFIG_IMG_ROM
-TARGETS += romfs
+TARGETS += template romfs
+endif
+
+ifdef CONFIG_IMG_RAW
+TARGETS += raw
 endif
 
 .PHONY: all $(TARGETS)
@@ -97,6 +99,12 @@ romfs: template
 	-rm -f romfs.devices
 	$(MAKE) -f Make.devices "MKDEV=echo >> romfs.devices"
 	mkromfs -d romfs.devices $(DESTDIR)
+
+# Create RAW filesystem
+
+raw: $(ELKS_DIR)/arch/i86/boot/Image
+	dd if=/dev/zero of=$(TARGET_FILE) bs=1024 count=$(TARGET_BLKS)
+	dd if=$(ELKS_DIR)/arch/i86/boot/Image of=$(TARGET_FILE) conv=notrunc
 
 # Clean target
 
