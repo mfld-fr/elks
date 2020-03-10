@@ -68,11 +68,6 @@ Some additional infos and debug defines
      parameters (this made problems with really 360k disks in 1.2 M drives).
 
 
-  elks\INIT\MAIN.C
-     To calculate the bogomips is vary slow at 8088! The new code use a
-     constant result. (in ROM Systems this should make no problems)
-     
-
 Some changes for configuration and segment placing
 
   elks\INCLUDE\LINUXMT\CONFIG.H
