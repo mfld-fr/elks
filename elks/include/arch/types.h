@@ -1,35 +1,42 @@
-/* arch/i86/include/asm/types.h - Basic Linux/MT data types. */
+/* File: arch/i86/include/arch/types.h */
+/* this is the actual "asm/types.h" in user land */
 
-#ifndef LX86_ARCH_TYPES_H
-#define LX86_ARCH_TYPES_H
+#pragma once
 
-/* Include the host & target common types */
+/* Portable types */
 
-#include <types.h>
+#include <stdint.h>
 
-/*@-namechecks@*/
+/* Shorter than C99 */
 
-/* First we define all of the __u and __s types...*/
+typedef uint8_t  u8_t;
+typedef uint16_t u16_t;
+typedef uint32_t u32_t;
 
-#define signed
+typedef int8_t  s8_t;
+typedef int16_t s16_t;
+typedef int32_t s32_t;
 
-typedef unsigned char			__u8,		*__pu8;
-typedef signed char			__s8,		*__ps8;
-typedef unsigned short int		__u16,		*__pu16;
-typedef signed short int		__s16,		*__ps16;
-typedef unsigned long int		__u32,		*__pu32;
-typedef signed long int 		__s32,	 	*__ps32;
+/* Linux traditional short types */
 
-/* __uint == 16bit here */
+typedef uint8_t  __u8;
+typedef uint16_t __u16;
+typedef uint32_t __u32;
 
-typedef unsigned short int		__uint,		*__puint;
-typedef signed short int		__sint,		*__psint;
+typedef int8_t   __s8;
+typedef int16_t  __s16;
+typedef int32_t  __s32;
 
 /* 8086 types */
 
+typedef  u8_t byte_t;
 typedef u16_t word_t;
 typedef u16_t seg_t;
 typedef u32_t addr_t;
+
+/* Optimal boolean size for IA16 is word_t */
+
+typedef word_t bool_t;
 
 /* Then we define registers, etc... */
 
@@ -60,4 +67,3 @@ typedef __u16			__pptr;
 #define NULL		((void *) 0)
 #endif
 
-#endif /* !LX86_ARCH_TYPES_H */

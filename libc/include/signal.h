@@ -2,8 +2,7 @@
 #ifndef __SIGNAL_H
 #define __SIGNAL_H
 
-#include <types.h>
-#include <features.h>
+#include <sys/types.h>
 
 typedef unsigned long sigset_t;		/* at least 32 bits */
 

@@ -1,4 +1,5 @@
-// This is the actual "sys/types.h"
+/* File: include/linux/types.h */
+/* This is the actual "sys/types.h" in user land */
 
 #pragma once
 
@@ -32,6 +33,12 @@ typedef __u32 ino_t;
 typedef __u16 ino_t;
 #define ino_print "u"
 #endif
+
+typedef u16_t pid_t;
+
+typedef u16_t uid_t;
+typedef u16_t gid_t;
+
 
 typedef __u16			mode_t;
 typedef __u16			nlink_t;
