@@ -15,10 +15,10 @@ struct cache_type_s;
 struct cache_entry_s {
 	struct cache_type_s * type;
 
-	list_t tnode;  // type LRU list
-	list_t hnode;  // head LRU list
+	list_s tnode;  // type LRU list
+	list_s hnode;  // head LRU list
 	atomic_t ref;  // reference count
-	lock_t lock;   // data lock
+	lock_t lock;   // access mutex
 	bool_t valid;  // valid flag
 	bool_t dirty;  // dirty flag
 };
@@ -28,7 +28,7 @@ typedef struct cache_entry_s cache_entry_t;
 // Cache type
 
 struct cache_type_s {
-	list_t root;  // type LRU list
+	list_s root;  // type LRU list
 	lock_t lock;  // access mutex
 
 	word_t max;   // maximum size (0: no retention)
@@ -47,7 +47,7 @@ typedef struct cache_type_s cache_type_t;
 // Cache head
 
 struct cache_head_s {
-	list_t root;  // global LRU list
+	list_s eroot;  // global LRU list
 	lock_t lock;  // access mutex
 };
 

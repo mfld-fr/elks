@@ -2,43 +2,32 @@
 // Local heap management
 
 #include <linuxmt/lock.h>
-#include <linuxmt/list.h>
 #include <linuxmt/heap.h>
-
-// Heap block header
-
-#define HEAP_TAG_USED 0x80
-
-struct heap_s {
-	list_t node;
-	word_t size;
-	byte_t tag;
-};
-
-typedef struct heap_s heap_t;
+#include <linuxmt/kernel.h>
 
 // Minimal block size to hold header and free list node
-#define HEAP_MIN_SIZE (sizeof (heap_t) + sizeof (list_t))
+#define HEAP_MIN_SIZE (sizeof (heap_s) + sizeof (list_s))
 
 // Heap root
+// TODO: regroup in one structure
 
 static lock_t _heap_lock;
-static heap_t * _heap_first;
+static heap_s * _heap_first;
 // TODO: free block list
-//static heap_t * _heap_free;
+//static heap_s * _heap_free;
 
 
 // Split block if enough large
 
-static void split (heap_t * h1, word_t size0)
+static void split (heap_s * h1, word_t size0)
 {
 	word_t size2 = h1->size - size0;
 
 	if (size2 >= HEAP_MIN_SIZE) {
 		h1->size = size0;
 
-		heap_t * h2 = (heap_t *) ((byte_t *) (h1 + 1) + size0);
-		h2->size = size2 - sizeof (heap_t);
+		heap_s * h2 = (heap_s *) ((byte_t *) (h1 + 1) + size0);
+		h2->size = size2 - sizeof (heap_s);
 		h2->tag = 0;  // free
 
 		list_insert_after (&(h1->node), &(h2->node));
@@ -48,12 +37,12 @@ static void split (heap_t * h1, word_t size0)
 
 // Get a free block
 
-static heap_t * free_get (word_t size0)
+static heap_s * free_get (word_t size0)
 {
-	heap_t * best_h  = 0;
+	heap_s * best_h  = 0;
 	word_t best_size = 0xFFFF;
 
-	heap_t * h = _heap_first;
+	heap_s * h = _heap_first;
 
 	// First get the smallest suitable block
 	// TODO: improve speed with free list
@@ -67,7 +56,7 @@ static heap_t * free_get (word_t size0)
 			if (size1 == size0) break;
 		}
 
-		h = (heap_t *) (h->node.next);
+		h = structof (h->node.next, heap_s, node);
 		if (h == _heap_first) break;
 	}
 
@@ -84,19 +73,19 @@ static heap_t * free_get (word_t size0)
 
 // Merge two contiguous blocks
 
-static void merge (heap_t * h1, heap_t * h2)
+static void merge (heap_s * h1, heap_s * h2)
 {
 	list_remove (&(h2->node));
-	h1->size = h1->size + sizeof (heap_t) + h2->size;
+	h1->size = h1->size + sizeof (heap_s) + h2->size;
 }
 
 
 // Try merge with previous block
 
-static heap_t * merge_prev (heap_t * h)
+static heap_s * merge_prev (heap_s * h)
 {
 	if (h == _heap_first) return h;
-	heap_t * prev = (heap_t *) (h->node.prev);
+	heap_s * prev = structof (h->node.prev, heap_s, node);
 	if (prev->tag & HEAP_TAG_USED) return h;
 	merge (prev, h);
 	return prev;
@@ -104,9 +93,9 @@ static heap_t * merge_prev (heap_t * h)
 
 // Try merge with next block
 
-static void merge_next (heap_t * h)
+static void merge_next (heap_s * h)
 {
-	heap_t * next = (heap_t *) (h->node.next);
+	heap_s * next = structof (h->node.next, heap_s, node);
 	if ((next != _heap_first) && !((next->tag) & HEAP_TAG_USED))
 		merge (h, next);
 }
@@ -117,7 +106,7 @@ static void merge_next (heap_t * h)
 void * heap_alloc (word_t size)
 {
 	wait_lock (&_heap_lock);
-	heap_t * h = free_get (size);
+	heap_s * h = free_get (size);
 	if (h) h++;  // skip header
 	event_unlock (&_heap_lock);
 	return h;
@@ -128,8 +117,8 @@ void * heap_alloc (word_t size)
 void heap_free (void * data)
 {
 	wait_lock (&_heap_lock);
-	heap_t * h1 = ((heap_t *) (data)) - 1;  // back to header
-	heap_t * h2 = merge_prev (h1);
+	heap_s * h1 = ((heap_s *) (data)) - 1;  // back to header
+	heap_s * h2 = merge_prev (h1);
 	if (h1 == h2)  // no merge
 		h2->tag = 0;  // free
 
@@ -143,8 +132,8 @@ void heap_add (void * data, word_t size)
 {
 	if (size >= HEAP_MIN_SIZE) {
 		wait_lock (&_heap_lock);
-		heap_t * h = (heap_t *) data;
-		h->size = size - sizeof (heap_t);
+		heap_s * h = (heap_s *) data;
+		h->size = size - sizeof (heap_s);
 		h->tag = 0;   // free
 
 		if (_heap_first)
@@ -157,4 +146,22 @@ void heap_add (void * data, word_t size)
 	event_unlock (&_heap_lock);
 	}
 }
+
+// Dump heap
+
+#ifdef HEAP_DEBUG
+
+void heap_iterate (int (* cb) (heap_s *))
+{
+	if (!_heap_first) return;
+	heap_s * h = _heap_first;
+
+	while (1) {
+		(*cb) (h);
+		h = structof (h->node.next, heap_s, node);
+		if (h == _heap_first) break;
+	}
+}
+
+#endif /* HEAP_DEBUG */
 

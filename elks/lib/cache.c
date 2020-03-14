@@ -5,6 +5,7 @@
 #include <linuxmt/cache.h>
 #include <linuxmt/wait.h>
 #include <linuxmt/string.h>
+#include <linuxmt/kernel.h>
 
 /////////////////////////////////////////////////////////////////////////////////
 // Typical usage on a very simple string cache
@@ -18,6 +19,7 @@ typedef struct string_entry_s string_entry_t;
 
 static cache_entry_t * string_alloc ()
 {
+	printk ("string_alloc\n");
 	string_entry_t * se = heap_alloc (sizeof (string_entry_t));
 	if (!se) return 0;
 	return &se->cache;
@@ -25,6 +27,7 @@ static cache_entry_t * string_alloc ()
 
 static void string_free (cache_entry_t * e)
 {
+	printk ("string_free\n");
 	string_entry_t * se = structof (e, string_entry_t, cache);
 	if (se->str) {
 		heap_free (se->str);
@@ -35,12 +38,14 @@ static void string_free (cache_entry_t * e)
 
 static int string_test (cache_entry_t * e, void * key)
 {
+	printk ("string_test\n");
 	string_entry_t * se = structof (e, string_entry_t, cache);
 	return strcmp (se->str, (char *) key);
 }
 
 static int string_load (cache_entry_t * e, void * key)
 {
+	printk ("string_load\n");
 	string_entry_t * se = structof (e, string_entry_t, cache);
 	char * str = heap_alloc (strlen ((char *) key));
 	if (!str) return 1;
@@ -51,6 +56,7 @@ static int string_load (cache_entry_t * e, void * key)
 
 static void string_store (cache_entry_t * e)
 {
+	printk ("string_store\n");
 	// nothing to store
 	cache_clean (e);
 }
@@ -75,8 +81,8 @@ int cache_test_main ()
 
 	cache_entry_t * e = cache_find (&string_cache, "first");
 	if (!e || !cache_lock (e)) return 1;
-	//string_entry_t * se = structof (e, string_entry_t, cache);
-	//kprintf ("entry=%s\n", se->str);
+	string_entry_t * se = structof (e, string_entry_t, cache);
+	printk ("entry=%s\n", se->str);
 	cache_clean (e);
 	cache_put (e);
 
@@ -86,8 +92,8 @@ int cache_test_main ()
 
 	e = cache_find (&string_cache, "second");
 	if (!e || !cache_lock (e)) return 1;
-	//se = structof (e, string_entry_t, cache);
-	//kprintf ("entry=%s\n", se->str);
+	se = structof (e, string_entry_t, cache);
+	printk ("entry=%s\n", se->str);
 	cache_clean (e);
 	cache_put (e);
 
@@ -105,7 +111,7 @@ static cache_head_t _head;
 
 void cache_head_init ()
 	{
-	list_init (&_head.root);
+	list_init (&_head.eroot);
 	_head.lock = 0;
 	}
 
@@ -142,6 +148,8 @@ static void cache_delete (cache_type_t * t, cache_entry_t * e)
 
 	(t->free) (e);
 }
+
+// Delete some entries of all types
 
 static word_t cache_head_empty (word_t max)
 	{
@@ -236,10 +244,10 @@ static cache_entry_t * cache_new (cache_type_t * t, void * key)
 		e->type = t;
 		list_insert_after (&t->root, &e->tnode);  // add head
 
-		// Add to global list
+		// Add to head list
 
 		lock_wait (&_head.lock);
-		list_insert_after (&_head.root, &e->hnode);  // add head
+		list_insert_after (&_head.eroot, &e->hnode);  // add head
 		unlock_event (&_head.lock);
 
 		// Anyone can reference the entry now
@@ -335,7 +343,7 @@ void cache_put (cache_entry_t * e)
 
 		lock_wait (&_head.lock);
 		list_remove (&e->hnode);
-		list_insert_after (&_head.root, &e->hnode);  // add head
+		list_insert_after (&_head.eroot, &e->hnode);  // add head
 		unlock_event (&_head.lock);
 	}
 
