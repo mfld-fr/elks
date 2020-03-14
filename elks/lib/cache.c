@@ -20,7 +20,7 @@ typedef struct string_entry_s string_entry_t;
 static cache_entry_t * string_alloc ()
 {
 	printk ("string_alloc\n");
-	string_entry_t * se = heap_alloc (sizeof (string_entry_t));
+	string_entry_t * se = heap_alloc (sizeof (string_entry_t), HEAP_TAG_STRING);
 	if (!se) return 0;
 	return &se->cache;
 }
@@ -47,7 +47,7 @@ static int string_load (cache_entry_t * e, void * key)
 {
 	printk ("string_load\n");
 	string_entry_t * se = structof (e, string_entry_t, cache);
-	char * str = heap_alloc (strlen ((char *) key));
+	char * str = heap_alloc (strlen ((char *) key), HEAP_TAG_STRING);
 	if (!str) return 1;
 	se->str = str;
 	cache_valid (e);

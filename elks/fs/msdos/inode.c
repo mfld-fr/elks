@@ -12,7 +12,6 @@
 #include <linuxmt/errno.h>
 #include <linuxmt/string.h>
 #include <linuxmt/stat.h>
-//#include <arch/segment.h>
 
 #ifdef CONFIG_FS_DEV
 struct msdos_devdir_entry devnods[DEVDIR_SIZE] = {
