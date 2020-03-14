@@ -163,8 +163,8 @@ static word_t cache_type_empty (cache_type_t * t, word_t max)
 {
 	word_t count = 0;
 
-	list_t * now = &t->root;
-	list_t * prev = now->prev;
+	list_s * now = &t->root;
+	list_s * prev = now->prev;
 
 	while (t->now && count < max) {
 
@@ -275,7 +275,7 @@ static cache_entry_t * cache_new (cache_type_t * t, void * key)
 
 static cache_entry_t * cache_search (cache_type_t * t, void * key)
 {
-	list_t * n = &t->root;
+	list_s * n = &t->root;
 	while (1)
 		{
 		n = n->next;
