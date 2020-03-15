@@ -34,8 +34,6 @@ struct fs_struct {
 };
 
 struct mm_struct {
-    //seg_t			cseg;
-    //seg_t			dseg;
 	struct segment * seg_code;
 	struct segment * seg_data;
     char			flags;

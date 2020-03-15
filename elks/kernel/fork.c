@@ -79,7 +79,7 @@ pid_t do_fork(int virtual)
     seg_get(currentp->mm.seg_code);
 
     if (virtual) {
-	seg_get(currentp->mm.seg_code);
+	seg_get(currentp->mm.seg_data);
     } else {
 	t->mm.seg_data = seg_dup(currentp->mm.seg_data);
 

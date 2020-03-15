@@ -188,7 +188,7 @@ int sys_execve(char *filename, char *sptr, size_t slen)
 	? (__pptr)base_data
 	: currentp->t_endseg) - slen;
     currentp->t_regs.sp = (__u16)(currentp->t_begstack);
-    fmemcpyb((word_t) currentp->t_begstack, seg_data->base, (word_t) sptr, ds, (word_t) slen);
+    fmemcpyb(currentp->t_begstack, seg_data->base, (word_t) sptr, ds, (word_t) slen);
 
     /* From this point, the old code and data segments are not needed anymore */
 
@@ -204,7 +204,7 @@ int sys_execve(char *filename, char *sptr, size_t slen)
     currentp->t_regs.es = currentp->t_regs.ss = seg_data->base;
 
     /* Wipe the BSS */
-    fmemsetb((word_t) ((seg_t) mh.dseg + base_data), seg_data->base, 0, (word_t) mh.bseg);
+    fmemsetb((seg_t) mh.dseg + base_data, seg_data->base, 0, (word_t) mh.bseg);
     {
 	register char *pi = (char *)0;
 

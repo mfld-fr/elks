@@ -11,9 +11,11 @@
 
 #include <arch/segment.h>
 
-
 #define MIN_STACK_SIZE 0x1000	/* 4k min stack above heap*/
 
+// TODO: reduce size
+// TODO: convert to tag
+#define SEG_FLAG_USED 0x0001
 
 // Segment descriptor
 
@@ -21,9 +23,6 @@
 // and to ease the 286 protected mode
 // whenever that mode comes back one day
 
-// TODO: reduce size
-// TODO: convert to tag
-#define SEG_FLAG_USED 0x0001
 
 // TODO: locking
 static segment_s * _seg_first;
@@ -274,3 +273,4 @@ void mm_init (seg_t start, seg_t end)
 		_seg_first = seg;
 	}
 }
+
