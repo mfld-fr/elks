@@ -13,8 +13,14 @@
 
 #define MIN_STACK_SIZE 0x1000	/* 4k min stack above heap*/
 
+// Minimal segment size to be useful
+// (= size of the smallest allocation)
+
+#define SEG_MIN_SIZE 1
+
 // TODO: reduce size
 // TODO: convert to tag
+#define SEG_FLAG_FREE 0x0000
 #define SEG_FLAG_USED 0x0001
 
 // Segment descriptor
@@ -23,9 +29,9 @@
 // and to ease the 286 protected mode
 // whenever that mode comes back one day
 
-
 // TODO: locking
-static segment_s * _seg_first;
+static list_s _seg_all;
+static list_s _seg_free;
 
 
 // Split segment if enough large
@@ -34,7 +40,7 @@ static int seg_split (segment_s * s1, segext_t size0)
 {
 	segext_t size2 = s1->size - size0;
 
-	if (size2 > 0 /* SEG_MIN_SIZE */) {
+	if (size2 >= SEG_MIN_SIZE) {
 
 		// TODO: use pool_alloc
 		segment_s * s2 = (segment_s *) heap_alloc (sizeof (segment_s), HEAP_TAG_SEG);
@@ -42,10 +48,11 @@ static int seg_split (segment_s * s1, segext_t size0)
 
 		s2->base = s1->base + size0;
 		s2->size = size2;
-		s2->flags = 0;  // free
+		s2->flags = SEG_FLAG_FREE;
 		s2->ref_count = 0;
 
-		list_insert_after (&s1->node, &s2->node);
+		list_insert_after (&s1->all, &s2->all);
+		list_insert_after (&s1->free, &s2->free);
 
 		s1->size = size0;
 	}
@@ -58,25 +65,23 @@ static int seg_split (segment_s * s1, segext_t size0)
 
 static segment_s * seg_free_get (segext_t size0)
 {
+	// First get the smallest suitable free segment
+
 	segment_s * best_seg  = 0;
 	segext_t best_size = 0xFFFF;
+	list_s * n = _seg_free.next;
 
-	if (!_seg_first) return 0;
-	segment_s * seg = _seg_first;
-
-	// First get the smallest suitable free segment
-	// TODO: improve speed with free list
-
-	while (1) {
+	while (n != &_seg_free) {
+		segment_s * seg = structof (n, segment_s, free);
 		segext_t size1 = seg->size;
-		if (!(seg->flags & SEG_FLAG_USED) && (size1 >= size0) && (size1 < best_size)) {
+
+		if ((seg->flags == SEG_FLAG_FREE) && (size1 >= size0) && (size1 < best_size)) {
 			best_seg  = seg;
 			best_size = size1;
 			if (size1 == size0) break;
 		}
 
-		seg = structof (seg->node.next, segment_s, node);
-		if (seg == _seg_first) break;
+		n = seg->free.next;
 	}
 
 	// Then allocate that free segment
@@ -88,6 +93,7 @@ static segment_s * seg_free_get (segext_t size0)
 
 		best_seg->flags = SEG_FLAG_USED;
 		best_seg->ref_count = 1;
+		list_remove (&(best_seg->free));
 	}
 
 	return best_seg;
@@ -98,31 +104,9 @@ static segment_s * seg_free_get (segext_t size0)
 
 static void seg_merge (segment_s * s1, segment_s * s2)
 {
-	list_remove (&s2->node);
+	list_remove (&s2->all);
 	s1->size += s2->size;
 	heap_free (s2);
-}
-
-
-// Try to merge with previous segment
-
-static segment_s * seg_merge_prev (segment_s * seg)
-{
-	if (seg == _seg_first) return seg;
-	segment_s * prev = structof (seg->node.prev, segment_s, node);
-	if (prev->flags & SEG_FLAG_USED) return seg;
-	seg_merge (prev, seg);
-	return prev;
-}
-
-
-// Try to merge with next segment
-
-static void seg_merge_right (segment_s * seg)
-{
-	segment_s * next = structof (seg->node.next, segment_s, node);
-	if (next != _seg_first && !(next->flags & SEG_FLAG_USED))
-		seg_merge (seg, next);
 }
 
 
@@ -140,14 +124,48 @@ segment_s * seg_alloc (segext_t size)
 
 // Free segment
 
-void seg_free (segment_s * seg1)
+void seg_free (segment_s * seg)
 {
 	//lock_wait (&_seg_lock);
-	segment_s * seg2 = seg_merge_prev (seg1);
-	if (seg1 == seg2)  // no segment merge
-		seg1->flags = 0;  // free
 
-	seg_merge_right (seg2);
+	// Free segment will be inserted to free list:
+	//   - tail if merged to previous or next free segment
+	//   - head if still alone to increase 'exact hit'
+	//     chance on next allocation of same size
+
+	list_s * i = &_seg_free;
+
+	// Try to merge with previous segment if free
+
+	list_s * p = seg->all.prev;
+	if (&_seg_all != p) {
+		segment_s * prev = structof (p, segment_s, all);
+		if (prev->flags == SEG_FLAG_FREE) {
+			list_remove (&(prev->free));
+			seg_merge (prev, seg);
+			i = _seg_free.prev;
+			seg = prev;
+		} else {
+			seg->flags = SEG_FLAG_FREE;
+		}
+	}
+
+	// Try to merge with next segment if free
+
+	list_s * n = seg->all.next;
+	if (n->next != &_seg_all) {
+		segment_s * next = structof (n, segment_s, all);
+		if (next->flags == SEG_FLAG_FREE) {
+			list_remove (&(next->free));
+		seg_merge (seg, next);
+			i = _seg_free.prev;
+		}
+	}
+
+	// Insert to free list head or tail
+
+	list_insert_after (i, &(seg->free));
+
 	//unlock_event (&_seg_lock);
 }
 
@@ -162,7 +180,7 @@ segment_s * seg_get (segment_s * seg)
 }
 
 
-// Decrease segment reference count */
+// Decrease segment reference count
 // Free segment on no more reference
 
 void seg_put (segment_s * seg)
@@ -186,29 +204,34 @@ segment_s * seg_dup (segment_s * src)
 }
 
 
-// Get memory information (free or used) in KB
+// Get memory information (free and used) in KB
 
-unsigned int mm_get_usage (int type, int used)
+void mm_get_usage (unsigned int * pfree, unsigned int * pused)
 {
-	segment_s * seg = _seg_first;
-	if (!_seg_first) return 0;
+	unsigned int free = 0;
+	unsigned int used = 0;
 
-	word_t res = 0;
+	list_s * n = _seg_all.next;
 
-	if (type == MM_MEM) {
-		while (1) {
+	while (n != &_seg_all) {
+		segment_s * seg = structof (n, segment_s, all);
+
 			/*if (used) printk ("seg %X: size %u used %u count %u\n",
 				seg->base, seg->size, seg->flags, seg->ref_count);*/
 
-			if ((seg->flags & SEG_FLAG_USED) == used)
-				res += seg->size >> 6;
+		if (seg->flags == SEG_FLAG_FREE)
+			free += seg->size;
+		else
+			used += seg->size;
 
-			seg = structof (seg->node.next, segment_s, node);
-			if (seg == _seg_first) break;
-		}
+		n = seg->all.next;
 	}
 
-	return res;
+	// Convert paragraphs to kilobytes
+	// Floor, not ceiling, so average return
+
+	*pfree = ((free + 31) >> 6);
+	*pused = ((used + 31) >> 6);
 }
 
 
@@ -222,7 +245,7 @@ int sys_brk (__pptr newbrk)
 		current->pid, newbrk, currentp->t_enddata, currentp->t_endbrk,
 		currentp->t_regs.sp - currentp->t_endbrk,
 		currentp->t_regs.sp, currentp->t_endseg,
-		mm_get_usage(MM_MEM, 1), mm_get_usage(MM_MEM, 0));*/
+		mm_get_usage(MM_MEM, SEG_FLAG_USED), mm_get_usage(MM_MEM, 0));*/
 
     if (newbrk < currentp->t_enddata)
         return -ENOMEM;
@@ -262,15 +285,18 @@ int sys_sbrk (int increment, u16_t * pbrk)
 
 void mm_init (seg_t start, seg_t end)
 {
+	list_init (&_seg_all);
+	list_init (&_seg_free);
+
 	segment_s * seg = (segment_s *) heap_alloc (sizeof (segment_s), HEAP_TAG_SEG);
 	if (seg) {
 		seg->base = start;
 		seg->size = end - start;
-		seg->flags = 0;  // free
+		seg->flags = SEG_FLAG_FREE;
 		seg->ref_count = 0;
 
-		list_init (&seg->node);
-		_seg_first = seg;
+		list_insert_before (&_seg_all, &(seg->all));  // add tail
+		list_insert_before (&_seg_free, &(seg->free));  // add tail
 	}
 }
 

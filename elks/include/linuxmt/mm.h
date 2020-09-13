@@ -14,10 +14,9 @@ extern unsigned long high_memory;
 #define VERIFY_READ 0
 #define VERIFY_WRITE 1
 
-#define MM_MEM	0
-
 struct segment {
-	list_s    node;
+	list_s    all;
+	list_s    free;
 	seg_t     base;
 	segext_t  size;
 	word_t    flags;
@@ -80,7 +79,7 @@ void seg_put (segment_s *);
 segment_s * seg_dup (segment_s *);
 
 void mm_stat (seg_t, seg_t);
-unsigned int mm_get_usage (int, int);
+void mm_get_usage (unsigned int * free, unsigned int * used);
 
-#endif
-#endif
+#endif // __KERNEL__
+#endif // !__LINUXMT_MM_H

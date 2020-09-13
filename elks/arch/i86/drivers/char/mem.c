@@ -156,7 +156,7 @@ size_t kmem_write(struct inode *inode, register struct file *filp,
 
 #ifdef HEAP_DEBUG
 
-int heap_cb (heap_s * h)
+void heap_cb (heap_s * h)
 {
 	printk ("heap:%Xh:%u:%hxh\n",h, h->size, h->tag);
 }
@@ -202,15 +202,11 @@ int kmem_ioctl(struct inode *inode, struct file *file, int cmd, register char *a
 	put_user((unsigned short int)kernel_ds, (void *)arg);
 	return 0;
     case MEM_GETUSAGE:
-	mu.free_memory = mm_get_usage(MM_MEM, 0);
-	mu.used_memory = mm_get_usage(MM_MEM, 1);
-
+	mm_get_usage (&(mu.free_memory), &(mu.used_memory));
 	memcpy_tofs(arg, &mu, sizeof(struct mem_usage));
-
 #ifdef HEAP_DEBUG
 	heap_iterate (heap_cb);
 #endif /* HEAP_DEBUG */
-
 	return 0;
     }
     return -EINVAL;
