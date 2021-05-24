@@ -14,9 +14,12 @@
 
 #define HEAP_TAG_FREE    0x00
 #define HEAP_TAG_USED    0x80
+#define HEAP_TAG_TYPE    0x0F
 #define HEAP_TAG_SEG     0x01
 #define HEAP_TAG_STRING  0x02
 #define HEAP_TAG_TTY     0x03
+#define HEAP_TAG_INT     0x04
+
 
 // TODO: move free list node from header to body
 // to reduce overhead for allocated block
@@ -26,7 +29,8 @@ struct heap {
 	list_s free;
 	word_t size;
 	byte_t tag;
-};
+	byte_t unused;  // padding
+} __attribute__ ((packed));
 
 typedef struct heap heap_s;
 

@@ -135,7 +135,7 @@ void xtk_init(void)
  *	with the monstrosity AT keyboards became.
  */
 
-void keyboard_irq(int irq, struct pt_regs *regs, void *dev_id)
+void keyboard_irq(int irq, struct pt_regs *regs)
 {
     static unsigned int ModeState = 0;
     static int E0Prefix = 0;

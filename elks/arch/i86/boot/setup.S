@@ -222,6 +222,13 @@ good_sig:
 
 start_os:
 
+	// Set DS again in case of ROM code
+
+#ifdef CONFIG_ROMCODE
+	mov	$SETUPSEG,%ax
+	mov	%ax,%ds
+#endif
+
 	mov $hello_mess,%si
 	call prtstr
 

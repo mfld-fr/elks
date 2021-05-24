@@ -173,7 +173,7 @@ int eth_select (struct inode * inode, struct file * filp, int sel_type)
 
 // Interrupt handler
 
-static void ne2k_int (int irq, struct pt_regs * regs, void * dev_id)
+static void ne2k_int (int irq, struct pt_regs * regs)
 {
 	word_t stat;
 

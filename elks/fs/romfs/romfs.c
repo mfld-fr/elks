@@ -4,7 +4,6 @@
 #include <linuxmt/types.h>
 #include <linuxmt/errno.h>
 #include <linuxmt/fs.h>
-#include <linuxmt/locks.h>
 #include <linuxmt/stat.h>
 #include <linuxmt/kernel.h>
 #include <linuxmt/mm.h>

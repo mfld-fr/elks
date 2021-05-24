@@ -217,7 +217,7 @@ static void receive_chars(register struct serial_info *sp)
     wake_up(&q->wait);
 }
 
-void rs_irq(int irq, struct pt_regs *regs, void *dev_id)
+void rs_irq(int irq, struct pt_regs *regs)
 {
     register struct serial_info *sp;
     register char *statusp;

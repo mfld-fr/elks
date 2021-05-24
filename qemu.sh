@@ -10,28 +10,10 @@ echo "Using QEMU: $QEMU"
 
 # Select disk image to use
 # MINIX or FAT .config build
-[ -f image/fd1440.bin ] && IMAGE="-fda image/fd1440.bin"
+[ -f image/fd.bin ] && IMAGE="-fda image/fd.bin"
 [ -f image/hd.bin ] && IMAGE="-hda image/hd.bin"
 [ -z "$IMAGE" ] && { echo 'Disk image not found!'; exit 1; }
 echo "Using disk image: $IMAGE"
-
-# FAT package manager build
-#IMAGE="-fda image/fd360-fat.bin"
-#IMAGE="-fda image/fd720-fat.bin"
-#IMAGE="-fda image/fd1440-fat.bin"
-#IMAGE="-fda image/fd2880-fat.bin"
-
-# MINIX package manager build
-#IMAGE="-fda image/fd360-minix.bin"
-#IMAGE="-fda image/fd720-minix.bin"
-#IMAGE="-fda image/fd1440-minix.bin"
-
-# Second disk for mount after boot
-#DISK2="-fdb image/fd360-fat.bin"
-#DISK2="-fdb image/fd720-fat.bin"
-#DISK2="-fdb image/fd1440-fat.bin"
-#DISK2="-fdb image/fd2880-fat.bin"
-#DISK2="-fdb image/fd1440-minix.bin"
 
 # Select your keyboard mapping here:
 # KEYBOARD="-k en-us"
@@ -55,7 +37,7 @@ HOSTFWD="-net user"
 
 # Configure QEMU as pure ISA system
 
-SERIAL="-chardev pty,id=chardev1 -device isa-serial,chardev=chardev1,id=serial1"
+#SERIAL="-chardev pty,id=chardev1 -device isa-serial,chardev=chardev1,id=serial1"
 
 $QEMU -nodefaults -name ELKS -machine isapc -cpu 486,tsc -m 1M \
 $KEYBOARD $QDISPLAY -vga std -rtc base=utc $SERIAL \

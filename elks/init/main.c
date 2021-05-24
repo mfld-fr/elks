@@ -34,7 +34,7 @@ void start_kernel(void)
     mm_init(base, end);
     buffer_init();
     inode_init();
-    init_IRQ();
+    irq_init();
     tty_init();
 
     init_console();

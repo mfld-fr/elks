@@ -1,8 +1,8 @@
-![logo](https://github.com/elks-org/elks/blob/master/Documentation/img/ELKS-Logo.png)
+![logo](https://github.com/jbruchon/elks/blob/master/Documentation/img/ELKS-Logo.png)
 
 
-![cross](https://github.com/elks-org/elks/workflows/cross/badge.svg)
-![main](https://github.com/elks-org/elks/workflows/main/badge.svg)
+![cross](https://github.com/jbruchon/elks/workflows/cross/badge.svg)
+![main](https://github.com/jbruchon/elks/workflows/main/badge.svg)
 
 
 # What is this ?

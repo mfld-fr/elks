@@ -2,7 +2,7 @@
 #define LX86_ARCH_KEYBOARD_H
 
 struct pt_regs;
-extern void keyboard_irq(int,struct pt_regs *,void *);
+extern void keyboard_irq(int,struct pt_regs *);
 extern void Console_set_vc(unsigned);
 
 #ifdef CONFIG_ARCH_SIBO
