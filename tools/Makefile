@@ -80,7 +80,7 @@ all:: $(CROSSDIR)/.gcc.install
 
 # EMU86
 
-EMU86_VER=5ea2e76a30c75223c484c3b1bd2f67646e3cfa94
+EMU86_VER=f99937262b2566d3d20339e5b200e8483cdec3a2
 EMU86_DIST=emu86-$(EMU86_VER)
 
 $(DISTDIR)/$(EMU86_DIST).zip:
@@ -96,6 +96,7 @@ $(BUILDDIR)/.emu86.src: $(DISTDIR)/$(EMU86_DIST).zip
 	touch $(BUILDDIR)/.emu86.src
 
 $(BUILDDIR)/.emu86.build: $(BUILDDIR)/.emu86.src
+	cp $(BUILDDIR)/emu86/config-elks.mk $(BUILDDIR)/emu86/config.mk
 	$(MAKE) -C $(BUILDDIR)/emu86 all
 	touch $(BUILDDIR)/.emu86.build
 

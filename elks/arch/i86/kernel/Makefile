@@ -36,8 +36,8 @@ include $(BASEDIR)/Makefile-rules
 #########################################################################
 # Objects to be compiled.
 
-OBJS  = bios16.o strace.o system.o irq.o irqtab.o process.o \
-		entry.o signal.o timer.o
+OBJS  = strace.o printreg.o system.o irq.o irqtab.o process.o bios16.o \
+		entry.o signal.o timer.o atomic.o
 
 ifeq ($(CONFIG_ARCH_IBMPC), y)
 OBJS += irq-8259.o timer-8254.o
