@@ -53,7 +53,7 @@ static heap_s * free_get (word_t size0, byte_t tag)
 		heap_s * h = structof (n, heap_s, free);
 		word_t size1  = h->size;
 
-		if ((h->tag == HEAP_TAG_FREE) && (size1 >= size0) && (size1 < best_size)) {
+		if ((size1 >= size0) && (size1 < best_size)) {
 			best_h  = h;
 			best_size = size1;
 			if (size1 == size0) break;
@@ -129,7 +129,7 @@ void heap_free (void * data)
 	// Try to merge with next block if free
 
 	list_s * n = h->all.next;
-	if (n->next != &_heap_all) {
+	if (n != &_heap_all) {
 		heap_s * next = structof (n, heap_s, all);
 		if (next->tag == HEAP_TAG_FREE) {
 			list_remove (&(next->free));

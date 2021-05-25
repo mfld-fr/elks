@@ -75,7 +75,7 @@ static segment_s * seg_free_get (segext_t size0)
 		segment_s * seg = structof (n, segment_s, free);
 		segext_t size1 = seg->size;
 
-		if ((seg->flags == SEG_FLAG_FREE) && (size1 >= size0) && (size1 < best_size)) {
+		if ((size1 >= size0) && (size1 < best_size)) {
 			best_seg  = seg;
 			best_size = size1;
 			if (size1 == size0) break;
@@ -153,11 +153,11 @@ void seg_free (segment_s * seg)
 	// Try to merge with next segment if free
 
 	list_s * n = seg->all.next;
-	if (n->next != &_seg_all) {
+	if (n != &_seg_all) {
 		segment_s * next = structof (n, segment_s, all);
 		if (next->flags == SEG_FLAG_FREE) {
 			list_remove (&(next->free));
-		seg_merge (seg, next);
+			seg_merge (seg, next);
 			i = _seg_free.prev;
 		}
 	}
